@@ -96,6 +96,30 @@ npm run dev
 
 Visit [http://localhost:54891](http://localhost:54891) and start analyzing!
 
+## 📊 Sample Datasets for Testing
+
+Want to try it right away? Use these sample datasets:
+
+### 1. IMDB Top 1000 Movies
+```
+https://raw.githubusercontent.com/peetck/IMDB-Top1000-Movies/master/IMDB-Movie-Data.csv
+```
+**Try asking**:
+- "Download the IMDB dataset and show me the top 10 highest-rated movies"
+- "What's the relationship between movie rating and revenue?"
+- "Show me the distribution of movies by genre"
+
+### 2. HR Employee Dataset
+```
+https://raw.githubusercontent.com/pouyasattari/HR-Dataset-Analysis/main/HRDataset_v14.csv
+```
+**Try asking**:
+- "Download the HR dataset and analyze employee satisfaction by department"
+- "What factors correlate with employee performance scores?"
+- "Show me the distribution of salaries across different positions"
+
+Simply paste the URL in your question and the agent will automatically download and analyze it!
+
 ## 💡 Usage Examples
 
 ### Example 1: Quick Data Exploration
