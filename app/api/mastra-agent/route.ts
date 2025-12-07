@@ -1,4 +1,9 @@
 import { dataAnalyst } from '@/lib/mastra/agents/dataAnalyst';
+import { Agent } from '@mastra/core';
+import { createAnthropic } from '@ai-sdk/anthropic';
+import { pythonExecutor } from '@/lib/mastra/tools/pythonExecutor';
+import { displayImage } from '@/lib/mastra/tools/displayImage';
+import { fileDownloader } from '@/lib/mastra/tools/fileDownloader';
 
 // Mastra requires Node.js runtime
 export const runtime = 'nodejs';
@@ -7,6 +12,35 @@ export async function POST(req: Request) {
   try {
     console.log('🚀 [Mastra Agent] Received request');
     const { messages, availableFiles } = await req.json();
+
+    // Check for custom API key in headers
+    const customApiKey = req.headers.get('x-anthropic-api-key');
+
+    // Determine which agent to use
+    let agent = dataAnalyst;
+
+    if (customApiKey) {
+      console.log('🔑 [Using custom API key from frontend]');
+
+      // Create a dynamic agent with the custom API key
+      const anthropic = createAnthropic({
+        baseURL: 'http://23.106.130.6:3000/api/v1',
+        apiKey: customApiKey,
+      });
+
+      agent = new Agent({
+        name: 'Data Analyst',
+        instructions: dataAnalyst.instructions,
+        model: anthropic('claude-sonnet-4-5-20250929'),
+        tools: {
+          pythonExecutor,
+          displayImage,
+          fileDownloader,
+        },
+      });
+    } else {
+      console.log('🔑 [Using default API key from .env]');
+    }
 
     console.log('\n📨 [Received Messages]:');
     console.log(JSON.stringify(messages, null, 2));
@@ -31,7 +65,7 @@ export async function POST(req: Request) {
       async start(controller) {
         try {
           // 使用 Mastra 的 .stream() 方法，带回调
-          const agentStream = await dataAnalyst.stream(contextMessage, {
+          const agentStream = await agent.stream(contextMessage, {
             onStepFinish: async (step) => {
               console.log(`\n📋 [Step finished: ${step.stepType}]`);
 

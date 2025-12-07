@@ -43,10 +43,24 @@ export class MastraDataAgent {
     });
 
     try {
+      // Read API key from localStorage (if available)
+      const apiKey = typeof window !== 'undefined'
+        ? localStorage.getItem('anthropic_api_key')
+        : null;
+
       // 调用 Mastra API
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+
+      // Add API key header if available
+      if (apiKey) {
+        headers['x-anthropic-api-key'] = apiKey;
+      }
+
       const response = await fetch('/api/mastra-agent', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           messages: this.conversationHistory,
           availableFiles: this.availableFiles

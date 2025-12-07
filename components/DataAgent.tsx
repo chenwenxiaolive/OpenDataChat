@@ -8,6 +8,7 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import ApiKeySettings from './ApiKeySettings';
 
 interface Message {
   id: string;
@@ -28,6 +29,7 @@ export default function DataAgent() {
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isAgentRunning, setIsAgentRunning] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -281,6 +283,15 @@ export default function DataAgent() {
           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
             🚀 Mastra
           </span>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            title="API Key Settings"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -556,6 +567,11 @@ export default function DataAgent() {
           <h3 className="text-2xl font-bold text-blue-600">Drop file to load</h3>
         </div>
       )}
+      {/* API Key Settings Modal */}
+      <ApiKeySettings
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 }
