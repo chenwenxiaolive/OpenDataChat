@@ -10,7 +10,7 @@
 
 **Free. Open. Powerful. Chat with your data using AI - entirely in your browser.**
 
-[Live Demo](https://open-data-chat-2z4s.vercel.app/) • [Quick Start](#quick-start) • [Features](#features) • [Examples](#usage-examples)
+[Live Demo](https://open-data-chat.vercel.app/) • [Quick Start](#quick-start) • [Features](#features) • [Examples](#usage-examples)
 
 </div>
 
@@ -18,11 +18,11 @@
 
 ## 🎯 Try It Now - No Setup Required!
 
-**Live Demo**: [https://open-data-chat-2z4s.vercel.app/](https://open-data-chat-2z4s.vercel.app/)
+**Live Demo**: [https://open-data-chat.vercel.app/](https://open-data-chat.vercel.app/)
 
 Want to try it immediately without any setup? Use our free API key:
 
-1. Visit the [Live Demo](https://open-data-chat-2z4s.vercel.app/)
+1. Visit the [Live Demo](https://open-data-chat.vercel.app/)
 2. Click the 🔑 key icon in the top right corner
 3. Enter this free API key:
    ```
