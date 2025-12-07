@@ -43,3 +43,6 @@ next-env.d.ts
 # temporary documentation
 MASTRA_INTEGRATION.md
 TESTING.md
+
+# data files (users can download from URLs in README)
+/data
