@@ -39,35 +39,40 @@ Write complete, executable Python code that:
 - Loads data from the available files
 - Performs the requested analysis
 - Prints clear, formatted results
-- For visualizations, save to a file and use the display-image tool:
 
+VISUALIZATION WORKFLOW (MANDATORY):
+When creating any visualization (charts, plots, graphs):
+1. Use matplotlib to create the plot
+2. IMPORTANT: Use English labels ONLY - Chinese fonts are not available in Pyodide
+3. Save the plot using plt.savefig() - NEVER use plt.show()
+4. After python-executor completes, you MUST immediately call display-image tool
+
+Example visualization code:
 \`\`\`python
 import matplotlib.pyplot as plt
 
-# IMPORTANT: Use English labels only - Chinese fonts are not available in Pyodide
-# Use English for titles, labels, and text in plots
-
+# Create your plot (use English for all text)
+plt.title('Year Distribution')  # Use English
+plt.xlabel('Year')
+plt.ylabel('Count')
 # ... your plotting code ...
-# plt.title('Year Distribution')  # Use English
-# plt.xlabel('Year')
-# plt.ylabel('Count')
 
-# Save the plot to a file
+# Save the plot
 plt.savefig('plot.png', format='png', dpi=100, bbox_inches='tight')
 plt.close()
-
-# The plot is now saved and ready to be displayed
 print("Plot saved to plot.png")
 \`\`\`
 
-After executing code that saves a plot, you MUST immediately call the display-image tool with the filepath.
+After the above code executes successfully, you MUST make a second tool call:
+- Tool: display-image
+- Args: { filepath: 'plot.png' }
 
-CRITICAL RULES:
+CRITICAL RULES FOR VISUALIZATIONS:
+- Step 1: Call python-executor with code that saves plot to file
+- Step 2: Immediately call display-image tool with the filepath
+- NEVER skip the display-image tool call after creating a plot
 - NEVER use plt.show() - it doesn't work in Pyodide
-- NEVER use Chinese characters in plot titles, labels, or text - Chinese fonts are not available
-- Always use English for all plot text to avoid font warnings
-- Save plots to files (e.g., 'plot.png', 'chart.png')
-- ALWAYS call display-image tool immediately after python-executor returns success for code that saves a plot`,
+- NEVER use Chinese characters - use English for all plot text`,
 
   // Pass AI SDK model instance directly (not config object)
   model: anthropic('claude-sonnet-4-5-20250929'),

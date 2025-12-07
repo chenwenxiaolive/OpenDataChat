@@ -27,6 +27,7 @@ export default function DataAgent() {
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isAgentRunning, setIsAgentRunning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -76,11 +77,6 @@ export default function DataAgent() {
               setUploadedFiles(newFiles);
               mastraAgent.updateAvailableFiles(newFiles);
 
-              setMessages([{
-                id: Date.now().toString(),
-                type: 'system',
-                content: 'Default dataset loaded: HRDataset_v14.csv (HR employee data)'
-              }]);
               console.log('Default dataset loaded');
             } catch (err) {
               console.error('Failed to load default dataset:', err);
@@ -198,6 +194,9 @@ export default function DataAgent() {
     }]);
     setInput('');
 
+    // 设置 Agent 运行状态
+    setIsAgentRunning(true);
+
     // 处理查询 - agent 会为每个部分调用一次 onBubble
     try {
       await agent.processQuery(text, (bubble) => {
@@ -225,6 +224,9 @@ export default function DataAgent() {
         content: err.message || String(err),
         isError: true
       }]);
+    } finally {
+      // 处理完成，关闭运行状态
+      setIsAgentRunning(false);
     }
   }, [input, agent]);
 
@@ -307,7 +309,7 @@ export default function DataAgent() {
       >
         {messages.length === 0 ? (
           <div className="max-w-3xl mx-auto text-center mt-10">
-            <h2 className="text-2xl font-bold mb-2">I'm your Data Analysis Agent</h2>
+            <h2 className="text-2xl font-bold mb-2 text-gray-900">I'm your Data Analysis Agent</h2>
             <p className="text-gray-500">
               Drag and drop Excel/CSV files, or tell me what data you want to analyze.
             </p>
@@ -500,7 +502,11 @@ export default function DataAgent() {
             </div>
           )}
 
-          <div className="relative shadow-lg rounded-xl border border-gray-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 transition-shadow">
+          <div className={`relative shadow-lg rounded-xl border bg-white overflow-hidden transition-all ${
+            isAgentRunning
+              ? 'border-green-500 ring-2 ring-green-500 animate-pulse'
+              : 'border-gray-300 focus-within:ring-2 focus-within:ring-blue-500'
+          }`}>
             <textarea
               id="user-query"
               name="user-query"
