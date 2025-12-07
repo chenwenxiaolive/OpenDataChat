@@ -118,6 +118,18 @@ export async function POST(req: Request) {
                         title: payload.args.title
                       }) + '\n'
                     ));
+
+                  } else if (payload && payload.toolName === 'fileDownloader' && payload.args?.url) {
+                    console.log('📥 [Tool call - File Downloader]:', payload.args.url);
+
+                    // 发送文件下载指令
+                    controller.enqueue(encoder.encode(
+                      JSON.stringify({
+                        type: 'download-file',
+                        url: payload.args.url,
+                        filename: payload.args.filename
+                      }) + '\n'
+                    ));
                   }
                 }
               }

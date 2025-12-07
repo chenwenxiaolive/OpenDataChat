@@ -33,7 +33,8 @@ export class MastraDataAgent {
 
   async processQuery(
     userQuery: string,
-    onBubble: (bubble: BubbleMessage) => void
+    onBubble: (bubble: BubbleMessage) => void,
+    onFileAdded?: (filename: string) => void
   ): Promise<void> {
     // 添加到历史
     this.conversationHistory.push({
@@ -211,6 +212,55 @@ export class MastraDataAgent {
                     isError: true
                   };
                   console.log('🎈 [Creating Error Bubble]:', bubble.id);
+                  onBubble(bubble);
+                }
+
+              } else if (message.type === 'download-file') {
+                // 下载文件并保存到 Pyodide 虚拟文件系统
+                console.log('📥 [Download File]:', message.url);
+
+                try {
+                  // 从 URL 获取文件
+                  const response = await fetch(message.url);
+                  if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+
+                  const blob = await response.blob();
+                  const arrayBuffer = await blob.arrayBuffer();
+                  const data = new Uint8Array(arrayBuffer);
+
+                  // 从 URL 提取文件名或使用提供的文件名
+                  const filename = message.filename || message.url.split('/').pop() || 'downloaded_file';
+
+                  // 保存到 Pyodide 文件系统
+                  this.pyodide.FS.writeFile(filename, data);
+
+                  // 更新可用文件列表
+                  this.availableFiles.push(filename);
+
+                  // 通知组件更新文件列表
+                  if (onFileAdded) {
+                    onFileAdded(filename);
+                  }
+
+                  // 发送成功消息
+                  const bubble = {
+                    id: `download-success-${Date.now()}-${Math.random()}`,
+                    type: 'system' as const,
+                    content: `✅ File downloaded: ${filename}`,
+                    isStreaming: false
+                  };
+                  console.log('🎈 [Creating Download Success Bubble]:', bubble.id);
+                  onBubble(bubble);
+                } catch (error: any) {
+                  const bubble = {
+                    id: `download-error-${Date.now()}-${Math.random()}`,
+                    type: 'system' as const,
+                    content: `❌ Error downloading file: ${error.message}`,
+                    isError: true
+                  };
+                  console.log('🎈 [Creating Download Error Bubble]:', bubble.id);
                   onBubble(bubble);
                 }
 

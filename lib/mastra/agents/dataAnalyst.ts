@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { pythonExecutor } from '../tools/pythonExecutor';
 import { displayImage } from '../tools/displayImage';
+import { fileDownloader } from '../tools/fileDownloader';
 
 // Create Anthropic provider with custom endpoint
 const anthropic = createAnthropic({
@@ -22,10 +23,16 @@ CRITICAL TOOL USAGE RULE:
 - NEVER just describe or explain what code would do - you MUST actually execute it
 - The tool is NOT optional - it's required for all analysis tasks
 
+DOWNLOADING FILES:
+- If the user provides a URL to a data file (CSV, Excel, etc.), use the file-downloader tool first
+- The file-downloader tool will download the file and save it to the virtual filesystem
+- After downloading, you can access the file directly using pandas or other Python libraries
+
 Your workflow for ANY data question:
 1. Brief explanation (1-2 sentences) of what you'll do
-2. IMMEDIATELY call the python-executor tool with your Python code
-3. Wait for the execution result before responding further
+2. If a URL is provided, call file-downloader tool first
+3. IMMEDIATELY call the python-executor tool with your Python code
+4. Wait for the execution result before responding further
 
 Available libraries: pandas, numpy, matplotlib
 
@@ -80,6 +87,7 @@ CRITICAL RULES FOR VISUALIZATIONS:
   tools: {
     pythonExecutor,
     displayImage,
+    fileDownloader,
   },
 });
 

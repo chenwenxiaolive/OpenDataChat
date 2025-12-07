@@ -1,171 +1,303 @@
-# Pyodide Notebook - 基于 Next.js 的浏览器端 Python Notebook
+# 🐍 OpenDataChat - Open Source AI Data Analysis in Your Browser
 
-这是一个完全运行在浏览器中的 Python Notebook 应用，使用 [Pyodide](https://pyodide.org/) 在浏览器中执行 Python 代码，无需任何后端服务器。
+<div align="center">
 
-## 特性
+![Open Source](https://img.shields.io/badge/Open%20Source-❤️-green.svg)
+![Python](https://img.shields.io/badge/Python-3.12-blue.svg)
+![Next.js](https://img.shields.io/badge/Next.js-15-black.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
-- 纯前端运行，无需 Python 后端服务器
-- 支持大部分 Python 标准库
-- 可以使用科学计算库（NumPy, Pandas, Matplotlib 等）
-- 多单元格支持，类似 Jupyter Notebook
-- 可直接部署到 Vercel 等静态托管平台
-- 响应式设计，支持移动端访问
+**Free. Open. Powerful. Chat with your data using AI - entirely in your browser.**
 
-## 快速开始
+[Live Demo](#) • [Quick Start](#quick-start) • [Features](#features) • [Examples](#usage-examples)
 
-### 本地开发
+</div>
 
-1. 安装依赖：
+---
+
+## 🌟 What Makes This Special?
+
+Imagine having a data scientist at your fingertips, ready to analyze any dataset you throw at it - all running **entirely in your browser**. No Python installation. No cloud credits. No privacy concerns.
+
+**OpenDataChat** is an open-source project that combines the power of AI agents with browser-based Python execution to create the ultimate data analysis companion:
+
+- 🤖 **AI-Powered Analysis**: Natural language interface powered by Claude Sonnet 4.5
+- 🚀 **Runs Anywhere**: Pure browser-based - works offline after initial load
+- 📊 **Full Python Stack**: NumPy, Pandas, Matplotlib - all in the browser
+- 💬 **Chat Interface**: Just ask questions in plain English
+- 🔒 **Privacy First**: Your data never leaves your browser
+- 📥 **Smart File Handling**: Drag & drop or download from URLs
+- ✨ **Real-time Streaming**: Watch analysis unfold as the agent thinks
+
+## ✨ Features
+
+### 🎯 Core Capabilities
+
+- **Natural Language Queries**: "Show me the correlation between age and salary" - just ask!
+- **Automatic Code Generation**: Agent writes and executes Python code for you
+- **Intelligent Tool Use**: Automatically downloads files, runs analysis, creates visualizations
+- **Streaming Responses**: See the agent's thought process in real-time
+- **Interactive Visualizations**: Matplotlib charts rendered inline
+- **File Management**: Upload CSV/Excel or provide URLs for automatic download
+- **Conversation Memory**: Context-aware across multiple queries
+
+### 🔧 Technical Features
+
+- **Powered by Mastra Agent Framework**: Robust AI agent orchestration
+- **Pyodide Integration**: Full Python 3.12 runtime in WebAssembly
+- **Modern React UI**: Built with Next.js 15 and TypeScript
+- **Tailwind CSS**: Beautiful, responsive design
+- **Zero Backend**: Fully client-side (except AI API calls)
+- **Easy Deployment**: Deploy to Vercel in seconds
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- An Anthropic API key ([get one here](https://console.anthropic.com/))
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/yourusername/OpenDataChat.git
+cd OpenDataChat
+
+# Install dependencies
 npm install
-```
 
-2. 启动开发服务器：
+# Set up environment variables
+cp .env.local.example .env.local
+# Edit .env.local and add your Anthropic API key
 
-```bash
+# Start the development server
 npm run dev
 ```
 
-3. 打开浏览器访问 [http://localhost:3000](http://localhost:3000)
+Visit [http://localhost:3000](http://localhost:3000) and start analyzing!
 
-### 构建生产版本
+## 💡 Usage Examples
 
-```bash
-npm run build
-npm start
-```
-
-## 部署到 Vercel
-
-这个项目可以零配置部署到 Vercel：
-
-1. 将代码推送到 GitHub
-2. 在 [Vercel](https://vercel.com) 导入项目
-3. 点击部署
-
-或者使用 Vercel CLI：
-
-```bash
-npm install -g vercel
-vercel
-```
-
-## 使用示例
-
-在 Notebook 中尝试以下 Python 代码：
-
-### 基础示例
-
-```python
-# Hello World
-print("Hello from Python in the browser!")
-
-# 变量和计算
-x = 10
-y = 20
-print(f"Sum: {x + y}")
-```
-
-### 使用 NumPy
-
-```python
-import numpy as np
-
-# 创建数组
-arr = np.array([1, 2, 3, 4, 5])
-print(f"Array: {arr}")
-print(f"Mean: {arr.mean()}")
-print(f"Std: {arr.std()}")
-```
-
-### 使用 Pandas
-
-```python
-import pandas as pd
-
-# 创建 DataFrame
-df = pd.DataFrame({
-    'name': ['Alice', 'Bob', 'Charlie'],
-    'age': [25, 30, 35],
-    'city': ['Beijing', 'Shanghai', 'Guangzhou']
-})
-
-print(df)
-print(f"\nAverage age: {df['age'].mean()}")
-```
-
-## 技术栈
-
-- [Next.js 15](https://nextjs.org/) - React 框架
-- [Pyodide 0.26](https://pyodide.org/) - 浏览器端 Python 运行时
-- [TypeScript](https://www.typescriptlang.org/) - 类型安全
-- [Tailwind CSS](https://tailwindcss.com/) - 样式框架
-
-## 项目结构
+### Example 1: Quick Data Exploration
 
 ```
-pyodide-notebook/
+You: "I have a CSV file with employee data. Can you show me the distribution of salaries by department?"
+
+Agent: I'll analyze the salary distribution by department for you.
+[Automatically loads data, generates Python code, creates visualization]
+```
+
+### Example 2: Download and Analyze
+
+```
+You: "Download https://example.com/sales-data.csv and show me the top 5 products"
+
+Agent: I'll download the file and analyze the top products.
+[Downloads file, processes data, shows results]
+```
+
+### Example 3: Complex Analysis
+
+```
+You: "Find correlations between employee satisfaction and performance scores, then create a heatmap"
+
+Agent: Let me analyze the correlations and create a visualization.
+[Runs statistical analysis, generates heatmap]
+```
+
+### Example 4: Time Series Analysis
+
+```
+You: "Plot the monthly sales trend for the last year with a moving average"
+
+Agent: I'll create a trend analysis with moving averages.
+[Processes time series data, creates multi-line plot]
+```
+
+## 🎨 Screenshots
+
+### Download Files from URL
+Download datasets directly from URLs and analyze them instantly.
+
+![Download from URL](screenshot/download_from_url.png)
+
+### Interactive Visualizations
+Create beautiful charts and visualizations with automatic code generation.
+
+![Display Image](screenshot/display_image.png)
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                         Browser                              │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              Next.js Frontend                         │  │
+│  │  ┌────────────────────────────────────────────────┐  │  │
+│  │  │  Mastra Agent (Claude Sonnet 4.5)             │  │  │
+│  │  │  - Natural Language Understanding              │  │  │
+│  │  │  - Code Generation                             │  │  │
+│  │  │  - Tool Orchestration                          │  │  │
+│  │  └────────────────────────────────────────────────┘  │  │
+│  │                      ↕                                │  │
+│  │  ┌────────────────────────────────────────────────┐  │  │
+│  │  │  Pyodide (Python 3.12 in WebAssembly)         │  │  │
+│  │  │  - NumPy, Pandas, Matplotlib                   │  │  │
+│  │  │  - Virtual File System                         │  │  │
+│  │  │  - Code Execution                              │  │  │
+│  │  └────────────────────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **AI Agent**: Mastra Framework, Claude Sonnet 4.5
+- **Python Runtime**: Pyodide 0.26 (Python 3.12)
+- **Styling**: Tailwind CSS
+- **Scientific Libraries**: NumPy, Pandas, Matplotlib
+- **Deployment**: Vercel (recommended)
+
+## 📦 Project Structure
+
+```
+OpenDataChat/
 ├── app/
-│   ├── page.tsx          # 主页面
-│   ├── layout.tsx        # 布局
-│   └── globals.css       # 全局样式
+│   ├── page.tsx                 # Main page
+│   ├── api/
+│   │   └── mastra-agent/
+│   │       └── route.ts         # AI agent API endpoint
+│   └── globals.css              # Global styles
 ├── components/
-│   └── PyodideNotebook.tsx  # Notebook 组件
-├── next.config.ts        # Next.js 配置
+│   └── DataAgent.tsx            # Main chat interface
+├── lib/
+│   ├── mastra/
+│   │   ├── agents/
+│   │   │   └── dataAnalyst.ts   # AI agent configuration
+│   │   └── tools/
+│   │       ├── pythonExecutor.ts     # Python execution tool
+│   │       ├── displayImage.ts       # Image display tool
+│   │       └── fileDownloader.ts     # File download tool
+│   └── mastraDataAgent.ts       # Agent orchestration logic
+├── next.config.ts               # Next.js configuration
 └── package.json
 ```
 
-## 注意事项
+## 🎯 Use Cases
 
-1. **首次加载时间**：Pyodide 运行时约 6-8MB，首次加载可能需要几秒钟
-2. **浏览器兼容性**：需要支持 WebAssembly 的现代浏览器（Chrome 57+, Firefox 52+, Safari 11+）
-3. **安全策略**：项目配置了 COOP 和 COEP headers 以支持 SharedArrayBuffer
-4. **包安装**：可以使用 `micropip` 安装额外的 Python 包
+- **Data Exploration**: Quickly understand new datasets
+- **Business Analytics**: Analyze sales, marketing, HR data
+- **Research**: Statistical analysis and visualization
+- **Education**: Learn data science interactively
+- **Prototyping**: Test analysis ideas without setup
+- **Presentations**: Live data analysis demos
 
-## 扩展功能
+## 🔐 Privacy & Security
 
-### 安装额外的 Python 包
+- **Data Privacy**: All data processing happens in your browser
+- **No Server Storage**: Files are never uploaded to any server
+- **API Security**: Only AI requests are sent to Anthropic's API
+- **Open Source**: Full code transparency
+
+## 🌐 Browser Compatibility
+
+- ✅ Chrome 90+
+- ✅ Firefox 88+
+- ✅ Safari 15+
+- ✅ Edge 90+
+
+*Requires WebAssembly support*
+
+## 📚 Advanced Usage
+
+### Custom Python Packages
 
 ```python
+# Install additional packages
 import micropip
-await micropip.install('package-name')
+await micropip.install('scikit-learn')
+
+from sklearn.linear_model import LinearRegression
+# Use as normal
 ```
 
-### 使用 Matplotlib 绘图
+### Working with Large Files
 
-```python
-import matplotlib.pyplot as plt
-import numpy as np
+The agent can download files directly from URLs:
 
-x = np.linspace(0, 10, 100)
-y = np.sin(x)
-
-plt.plot(x, y)
-plt.title('Sine Wave')
-plt.savefig('plot.png')
+```
+"Download this dataset: https://example.com/large-dataset.csv and show me summary statistics"
 ```
 
-## 常见问题
+### Multiple Visualizations
 
-**Q: 为什么首次加载这么慢？**
-A: Pyodide 需要下载完整的 Python 运行时（WebAssembly），约 6-8MB。后续访问会利用浏览器缓存，速度会快很多。
+```
+"Create a 2x2 subplot showing: 1) age distribution, 2) salary by department, 3) correlation heatmap, 4) tenure histogram"
+```
 
-**Q: 支持哪些 Python 版本？**
-A: Pyodide 0.26 基于 Python 3.12。
+## 🚀 Deployment
 
-**Q: 可以访问文件系统吗？**
-A: 可以使用浏览器的虚拟文件系统，但无法访问本地文件系统。
+### Deploy to Vercel (Recommended)
 
-**Q: 性能如何？**
-A: 对于大多数数据分析任务，性能接近原生 Python。但对于计算密集型任务，可能会比原生 Python 慢 2-3 倍。
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/OpenDataChat)
 
-## License
+Or manually:
 
-MIT
+```bash
+# Build for production
+npm run build
 
-## 了解更多
+# Deploy to Vercel
+vercel --prod
+```
 
-- [Pyodide 文档](https://pyodide.org/en/stable/)
-- [Next.js 文档](https://nextjs.org/docs)
-- [Vercel 部署文档](https://vercel.com/docs)
+### Environment Variables
+
+Create a `.env.local` file:
+
+```bash
+ANTHROPIC_AUTH_TOKEN=your_api_key_here
+```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Pyodide](https://pyodide.org/) - Amazing Python in the browser
+- [Mastra](https://mastra.ai/) - Powerful agent framework
+- [Anthropic](https://anthropic.com/) - Claude AI
+- [Next.js](https://nextjs.org/) - The React framework
+
+## 📮 Contact & Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/OpenDataChat/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/OpenDataChat/discussions)
+
+## ⭐ Star History
+
+If you find this project useful, please consider giving it a star!
+
+---
+
+<div align="center">
+
+**Built with ❤️ using AI agents and modern web technologies**
+
+[⬆ Back to Top](#-opendatachat---open-source-ai-data-analysis-in-your-browser)
+
+</div>

@@ -168,24 +168,37 @@ export default function DataAgent() {
 
     // 处理查询 - agent 会为每个部分调用一次 onBubble
     try {
-      await agent.processQuery(text, (bubble) => {
-        console.log('🎈 [Bubble Update]', bubble.id, bubble.type, bubble.content.substring(0, 30));
+      await agent.processQuery(
+        text,
+        (bubble) => {
+          console.log('🎈 [Bubble Update]', bubble.id, bubble.type, bubble.content.substring(0, 30));
 
-        setMessages(prev => {
-          // 查找是否已存在相同 ID 的气泡
-          const existingIndex = prev.findIndex(msg => msg.id === bubble.id);
+          setMessages(prev => {
+            // 查找是否已存在相同 ID 的气泡
+            const existingIndex = prev.findIndex(msg => msg.id === bubble.id);
 
-          if (existingIndex >= 0) {
-            // 更新现有气泡
-            const updated = [...prev];
-            updated[existingIndex] = bubble;
-            return updated;
-          } else {
-            // 添加新气泡
-            return [...prev, bubble];
-          }
-        });
-      });
+            if (existingIndex >= 0) {
+              // 更新现有气泡
+              const updated = [...prev];
+              updated[existingIndex] = bubble;
+              return updated;
+            } else {
+              // 添加新气泡
+              return [...prev, bubble];
+            }
+          });
+        },
+        (filename) => {
+          // 文件下载完成后，更新文件列表
+          console.log('📥 [File Added]:', filename);
+          setUploadedFiles(prev => {
+            if (!prev.includes(filename)) {
+              return [...prev, filename];
+            }
+            return prev;
+          });
+        }
+      );
     } catch (err: any) {
       setMessages(prev => [...prev, {
         id: `error-${Date.now()}`,
@@ -245,9 +258,9 @@ export default function DataAgent() {
             </svg>
           </div>
           <h1 className="font-bold text-lg text-gray-800">
-            Data Agent{' '}
+            OpenDataChat{' '}
             <span className="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-              Pyodide Powered
+              Open Source
             </span>
           </h1>
         </div>
@@ -277,9 +290,9 @@ export default function DataAgent() {
       >
         {messages.length === 0 ? (
           <div className="max-w-3xl mx-auto text-center mt-10">
-            <h2 className="text-2xl font-bold mb-2 text-gray-900">I'm your Data Analysis Agent</h2>
+            <h2 className="text-2xl font-bold mb-2 text-gray-900">Welcome to OpenDataChat</h2>
             <p className="text-gray-500">
-              Drag and drop Excel/CSV files, or tell me what data you want to analyze.
+              Chat with your data using AI. Upload files or provide URLs to get started.
             </p>
           </div>
         ) : (
