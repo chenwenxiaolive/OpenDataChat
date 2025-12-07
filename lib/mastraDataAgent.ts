@@ -57,90 +57,141 @@ export class MastraDataAgent {
         throw new Error(error.error || 'Failed to get response');
       }
 
-      // 读取完整响应（不再分块处理，等待完整数据）
+      // 流式读取响应
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      let fullData = '';
+      let buffer = '';
+      let allText = '';
+      let currentTextBubbleId: string | null = null;
+      let currentTextContent = '';
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
+
           if (done) break;
-          fullData += decoder.decode(value, { stream: true });
-        }
-      }
 
-      console.log('📦 [Full Response]:', fullData);
+          // 解码新数据
+          buffer += decoder.decode(value, { stream: true });
 
-      // 解析完整的 JSON 响应
-      const lines = fullData.split('\n').filter(line => line.trim());
+          // 处理完整的行
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // 保留不完整的行
 
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        try {
-          const message = JSON.parse(line);
-          console.log(`📋 [Message ${i + 1}/${lines.length}]:`, message.type, message.content?.substring(0, 30));
-
-          if (message.type === 'assistant-text') {
-            // AI 的文字回复
-            const bubble = {
-              id: `assistant-${Date.now()}-${Math.random()}`,
-              type: 'assistant' as const,
-              content: message.content,
-              isStreaming: false
-            };
-            console.log('🎈 [Creating Assistant Bubble]:', bubble.id);
-            onBubble(bubble);
-            // 添加小延迟确保 React 正确渲染
-            await new Promise(resolve => setTimeout(resolve, 10));
-          } else if (message.type === 'code-execution') {
-            // 代码执行结果
-            console.log('🐍 [Executing Code]:', message.code.substring(0, 50));
+          for (const line of lines) {
+            if (!line.trim()) continue;
 
             try {
-              const result = await this.executeCode(message.code);
-              const bubble = {
-                id: `code-result-${Date.now()}-${Math.random()}`,
-                type: 'code-result' as const,
-                content: result,
-                isStreaming: false
-              };
-              console.log('🎈 [Creating Code Result Bubble]:', bubble.id);
-              onBubble(bubble);
-              await new Promise(resolve => setTimeout(resolve, 10));
-            } catch (error: any) {
-              const bubble = {
-                id: `code-error-${Date.now()}-${Math.random()}`,
-                type: 'code-result' as const,
-                content: `Error: ${error.message}`,
-                isError: true
-              };
-              console.log('🎈 [Creating Error Bubble]:', bubble.id);
-              onBubble(bubble);
-              await new Promise(resolve => setTimeout(resolve, 10));
+              const message = JSON.parse(line);
+              console.log(`📋 [Stream Message]:`, message.type, message.content?.substring(0, 30));
+
+              if (message.type === 'assistant-text-chunk') {
+                // 文本分块 - 累积到当前气泡
+                if (!currentTextBubbleId) {
+                  currentTextBubbleId = `assistant-${Date.now()}-${Math.random()}`;
+                  currentTextContent = '';
+                }
+
+                currentTextContent += message.content;
+                allText += message.content;
+
+                // 更新气泡（打字机效果）
+                const bubble = {
+                  id: currentTextBubbleId,
+                  type: 'assistant' as const,
+                  content: currentTextContent,
+                  isStreaming: true
+                };
+                onBubble(bubble);
+
+              } else if (message.type === 'assistant-text-complete') {
+                // 文本完成标记
+                if (currentTextBubbleId) {
+                  const bubble = {
+                    id: currentTextBubbleId,
+                    type: 'assistant' as const,
+                    content: currentTextContent,
+                    isStreaming: false
+                  };
+                  onBubble(bubble);
+                  currentTextBubbleId = null;
+                  currentTextContent = '';
+                }
+
+              } else if (message.type === 'assistant-text') {
+                // 完整文本消息（代码块等）
+                // 先结束当前的打字机效果
+                if (currentTextBubbleId) {
+                  const bubble = {
+                    id: currentTextBubbleId,
+                    type: 'assistant' as const,
+                    content: currentTextContent,
+                    isStreaming: false
+                  };
+                  onBubble(bubble);
+                  currentTextBubbleId = null;
+                  currentTextContent = '';
+                }
+
+                // 代码块作为单独的气泡，不累积到 allText
+                const bubble = {
+                  id: `assistant-${Date.now()}-${Math.random()}`,
+                  type: 'assistant' as const,
+                  content: message.content,
+                  isStreaming: false
+                };
+                console.log('🎈 [Creating Assistant Bubble (Code Block)]:', bubble.id);
+                onBubble(bubble);
+                // 不添加到 allText，因为这是代码块，不是对话内容
+
+              } else if (message.type === 'code-execution') {
+                // 代码执行前，先结束当前文本气泡
+                if (currentTextBubbleId) {
+                  const bubble = {
+                    id: currentTextBubbleId,
+                    type: 'assistant' as const,
+                    content: currentTextContent,
+                    isStreaming: false
+                  };
+                  onBubble(bubble);
+                  currentTextBubbleId = null;
+                  currentTextContent = '';
+                }
+
+                console.log('🐍 [Executing Code]:', message.code.substring(0, 50));
+
+                try {
+                  const result = await this.executeCode(message.code);
+                  const bubble = {
+                    id: `code-result-${Date.now()}-${Math.random()}`,
+                    type: 'code-result' as const,
+                    content: result,
+                    isStreaming: false
+                  };
+                  console.log('🎈 [Creating Code Result Bubble]:', bubble.id);
+                  onBubble(bubble);
+                } catch (error: any) {
+                  const bubble = {
+                    id: `code-error-${Date.now()}-${Math.random()}`,
+                    type: 'code-result' as const,
+                    content: `Error: ${error.message}`,
+                    isError: true
+                  };
+                  console.log('🎈 [Creating Error Bubble]:', bubble.id);
+                  onBubble(bubble);
+                }
+              }
+            } catch (e) {
+              console.error('Failed to parse line:', line, e);
             }
           }
-        } catch (e) {
-          console.error('Failed to parse line:', line, e);
         }
       }
 
-      // 添加完整响应到历史（简化，只保留文本部分）
-      const allText = lines
-        .map(line => {
-          try {
-            const msg = JSON.parse(line);
-            return msg.type === 'assistant-text' ? msg.content : '';
-          } catch {
-            return '';
-          }
-        })
-        .filter(Boolean)
-        .join('\n\n');
-
+      // 添加完整响应到历史
       this.conversationHistory.push({
         role: 'assistant',
-        content: allText
+        content: allText.trim()
       });
 
     } catch (error: any) {

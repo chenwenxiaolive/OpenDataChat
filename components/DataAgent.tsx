@@ -199,9 +199,22 @@ export default function DataAgent() {
     // 处理查询 - agent 会为每个部分调用一次 onBubble
     try {
       await agent.processQuery(text, (bubble) => {
-        console.log('🎈 [New Bubble]', bubble.type, bubble.content.substring(0, 50));
-        // 直接添加新气泡到列表
-        setMessages(prev => [...prev, bubble]);
+        console.log('🎈 [Bubble Update]', bubble.id, bubble.type, bubble.content.substring(0, 30));
+
+        setMessages(prev => {
+          // 查找是否已存在相同 ID 的气泡
+          const existingIndex = prev.findIndex(msg => msg.id === bubble.id);
+
+          if (existingIndex >= 0) {
+            // 更新现有气泡
+            const updated = [...prev];
+            updated[existingIndex] = bubble;
+            return updated;
+          } else {
+            // 添加新气泡
+            return [...prev, bubble];
+          }
+        });
       });
     } catch (err: any) {
       setMessages(prev => [...prev, {
@@ -378,7 +391,6 @@ export default function DataAgent() {
                           {msg.content}
                         </ReactMarkdown>
                       </div>
-                      {msg.isStreaming && <span className="inline-block w-2 h-4 bg-blue-600 animate-pulse ml-1"></span>}
                     </div>
                   </div>
                 </div>
@@ -387,6 +399,9 @@ export default function DataAgent() {
 
             // Code execution result
             if (msg.type === 'code-result') {
+              // 检查是否包含图片
+              const imgMatch = msg.content.match(/<img\s+src="data:image\/png;base64,([^"]+)"\s*\/>/);
+
               return (
                 <div key={msg.id} className="max-w-4xl mx-auto mb-4">
                   <div className="flex gap-3">
@@ -397,10 +412,21 @@ export default function DataAgent() {
                     </div>
                     <div className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <div className="text-xs font-semibold text-gray-500 mb-2">EXECUTION RESULT</div>
-                      <pre className="text-gray-900 font-mono text-sm whitespace-pre-wrap overflow-x-auto m-0">
-                        {msg.content}
-                      </pre>
-                      {msg.isStreaming && <span className="inline-block w-2 h-4 bg-green-600 animate-pulse ml-1"></span>}
+                      {imgMatch ? (
+                        // 渲染图片
+                        <div className="bg-white p-4 rounded border border-gray-300">
+                          <img
+                            src={`data:image/png;base64,${imgMatch[1]}`}
+                            alt="Plot"
+                            className="max-w-full h-auto"
+                          />
+                        </div>
+                      ) : (
+                        // 渲染纯文本
+                        <pre className="text-gray-900 font-mono text-sm whitespace-pre-wrap overflow-x-auto m-0">
+                          {msg.content}
+                        </pre>
+                      )}
                     </div>
                   </div>
                 </div>

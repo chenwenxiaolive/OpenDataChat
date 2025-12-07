@@ -20,58 +20,83 @@ export async function POST(req: Request) {
       contextMessage = `Available files: ${availableFiles.join(', ')}\n\nUser request: ${contextMessage}`;
     }
 
-    console.log('🤖 [Calling Mastra Agent]');
-
-    // 调用 Mastra Agent（等待完整结果，不流式）
-    const result = await dataAnalyst.generate(contextMessage);
-
-    console.log('✅ [Agent Response Received]');
-
-    // 解析响应的 steps
-    const steps = result.steps || [];
-    console.log('📦 [Steps]:', steps.length);
+    console.log('🤖 [Calling Mastra Agent with streaming]');
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
-      start(controller) {
-        for (const step of steps) {
-          if (step.content && Array.isArray(step.content)) {
-            console.log('📄 [Step content items]:', step.content.length);
+      async start(controller) {
+        try {
+          // 使用 Mastra 的 .stream() 方法，带回调
+          const agentStream = await dataAnalyst.stream(contextMessage, {
+            onStepFinish: (step) => {
+              console.log('📋 [Step finished]:', step.stepType);
+              console.log('📋 [Full step]:', JSON.stringify(step, null, 2));
 
-            for (const item of step.content) {
-              if (item.type === 'text' && item.text) {
-                // 发送文本部分
-                console.log('💬 [Text]:', item.text.substring(0, 50));
-                controller.enqueue(encoder.encode(
-                  JSON.stringify({
-                    type: 'assistant-text',
-                    content: item.text
-                  }) + '\n'
-                ));
-              } else if (item.type === 'tool-call' && item.input?.code) {
-                // 先发送代码内容（显示）
-                console.log('🐍 [Code]:', item.input.code.substring(0, 50));
-                controller.enqueue(encoder.encode(
-                  JSON.stringify({
-                    type: 'assistant-text',
-                    content: '```python\n' + item.input.code + '\n```'
-                  }) + '\n'
-                ));
+              // 处理工具调用
+              if (step.toolCalls && step.toolCalls.length > 0) {
+                for (const toolCall of step.toolCalls) {
+                  // Mastra 的 toolCall 结构：toolCall.payload.toolName 和 toolCall.payload.args
+                  const payload = (toolCall as any).payload;
+                  if (payload && payload.toolName === 'pythonExecutor' && payload.args?.code) {
+                    console.log('🐍 [Tool call - Python]:', payload.args.code.substring(0, 50));
 
-                // 再发送代码执行指令
-                controller.enqueue(encoder.encode(
-                  JSON.stringify({
-                    type: 'code-execution',
-                    code: item.input.code
-                  }) + '\n'
-                ));
+                    // 发送完成标记（结束之前的文本）
+                    controller.enqueue(encoder.encode(
+                      JSON.stringify({
+                        type: 'assistant-text-complete'
+                      }) + '\n'
+                    ));
+
+                    // 发送代码块
+                    controller.enqueue(encoder.encode(
+                      JSON.stringify({
+                        type: 'assistant-text',
+                        content: '```python\n' + payload.args.code + '\n```'
+                      }) + '\n'
+                    ));
+
+                    // 发送执行指令
+                    controller.enqueue(encoder.encode(
+                      JSON.stringify({
+                        type: 'code-execution',
+                        code: payload.args.code
+                      }) + '\n'
+                    ));
+                  }
+                }
               }
             }
-          }
-        }
+          });
 
-        controller.close();
-        console.log('✅ [Stream completed]');
+          // 流式接收文本块
+          for await (const chunk of agentStream.textStream) {
+            console.log('📝 [Text chunk]:', chunk);
+
+            // 发送文本块到前端
+            controller.enqueue(encoder.encode(
+              JSON.stringify({
+                type: 'assistant-text-chunk',
+                content: chunk
+              }) + '\n'
+            ));
+          }
+
+          console.log('✅ [Text stream completed]');
+
+          // 发送最终完成标记
+          controller.enqueue(encoder.encode(
+            JSON.stringify({
+              type: 'assistant-text-complete'
+            }) + '\n'
+          ));
+
+          console.log('✅ [Stream completed]');
+        } catch (error) {
+          console.error('❌ [Stream error]:', error);
+          controller.error(error);
+        } finally {
+          controller.close();
+        }
       }
     });
 
