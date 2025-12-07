@@ -12,7 +12,7 @@ export const fileDownloader = createTool({
     url: z.string().url().describe('The URL of the file to download'),
     filename: z.string().optional().describe('Optional filename to save as. If not provided, will extract from URL'),
   }),
-  execute: async ({ context, runId, machineId }) => {
+  execute: async () => {
     // This tool will be executed on the frontend where we have access to fetch and Pyodide
     // The actual execution logic is handled in the frontend
     return {

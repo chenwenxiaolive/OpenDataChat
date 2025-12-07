@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { PyodideInterface } from 'pyodide';
-import { MastraDataAgent, type AgentStep } from '@/lib/mastraDataAgent';
+import { MastraDataAgent } from '@/lib/mastraDataAgent';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
@@ -104,6 +104,7 @@ export default function DataAgent() {
 
       const reader = new FileReader();
       reader.onload = (e) => {
+        if (!e.target?.result) return;
         const data = new Uint8Array(e.target.result as ArrayBuffer);
         pyodide.FS.writeFile(file.name, data);
 

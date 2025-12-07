@@ -3,7 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "description": "Open Source AI-Powered Data Analysis in Your Browser",
-  "keywords": ["data-analysis", "ai", "python", "pyodide", "browser", "open-source"],
+  "keywords": [
+    "data-analysis",
+    "ai",
+    "python",
+    "pyodide",
+    "browser",
+    "open-source"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/yourusername/OpenDataChat.git"
@@ -31,7 +38,7 @@
     "react-syntax-highlighter": "^16.1.0",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
-    "zod": "^4.1.13"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -44,6 +51,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.7",
     "happy-dom": "^20.0.11",
+    "pyodide": "^0.26.4",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.0.15"
