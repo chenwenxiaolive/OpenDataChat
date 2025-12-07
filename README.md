@@ -23,7 +23,7 @@ Imagine having a data scientist at your fingertips, ready to analyze any dataset
 **OpenDataChat** is an open-source project that combines the power of AI agents with browser-based Python execution to create the ultimate data analysis companion:
 
 - 🤖 **AI-Powered Analysis**: Natural language interface powered by Claude Sonnet 4.5
-- 🚀 **Runs Anywhere**: Pure browser-based - works offline after initial load
+- 🚀 **Runs Anywhere**: Pure browser-based Python execution with Pyodide
 - 📊 **Full Python Stack**: NumPy, Pandas, Matplotlib - all in the browser
 - 💬 **Chat Interface**: Just ask questions in plain English
 - 🔒 **Privacy First**: Your data never leaves your browser
@@ -62,21 +62,21 @@ Imagine having a data scientist at your fingertips, ready to analyze any dataset
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/OpenDataChat.git
+git clone https://github.com/chenwenxiaolive/OpenDataChat.git
 cd OpenDataChat
 
 # Install dependencies
 npm install
 
 # Set up environment variables
-cp .env.local.example .env.local
-# Edit .env.local and add your Anthropic API key
+# Create .env.local file and add your Anthropic API key:
+echo "ANTHROPIC_AUTH_TOKEN=your_api_key_here" > .env.local
 
 # Start the development server
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) and start analyzing!
+Visit [http://localhost:54891](http://localhost:54891) and start analyzing!
 
 ## 💡 Usage Examples
 
@@ -242,7 +242,7 @@ The agent can download files directly from URLs:
 
 ### Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/OpenDataChat)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/chenwenxiaolive/OpenDataChat)
 
 Or manually:
 
@@ -285,8 +285,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📮 Contact & Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/OpenDataChat/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/OpenDataChat/discussions)
+- **Issues**: [GitHub Issues](https://github.com/chenwenxiaolive/OpenDataChat/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/chenwenxiaolive/OpenDataChat/discussions)
 
 ## ⭐ Star History
 
