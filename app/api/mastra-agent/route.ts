@@ -40,6 +40,7 @@ export async function POST(req: Request) {
                 for (const toolCall of step.toolCalls) {
                   // Mastra 的 toolCall 结构：toolCall.payload.toolName 和 toolCall.payload.args
                   const payload = (toolCall as any).payload;
+
                   if (payload && payload.toolName === 'pythonExecutor' && payload.args?.code) {
                     console.log('🐍 [Tool call - Python]:', payload.args.code.substring(0, 50));
 
@@ -103,6 +104,18 @@ export async function POST(req: Request) {
                       JSON.stringify({
                         type: 'code-execution',
                         code: payload.args.code
+                      }) + '\n'
+                    ));
+
+                  } else if (payload && payload.toolName === 'displayImage' && payload.args?.filepath) {
+                    console.log('🖼️  [Tool call - Display Image]:', payload.args.filepath);
+
+                    // 发送显示图片指令
+                    controller.enqueue(encoder.encode(
+                      JSON.stringify({
+                        type: 'display-image',
+                        filepath: payload.args.filepath,
+                        title: payload.args.title
                       }) + '\n'
                     ));
                   }

@@ -1,6 +1,7 @@
 import { Agent } from '@mastra/core';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { pythonExecutor } from '../tools/pythonExecutor';
+import { displayImage } from '../tools/displayImage';
 
 // Create Anthropic provider with custom endpoint
 const anthropic = createAnthropic({
@@ -38,12 +39,10 @@ Write complete, executable Python code that:
 - Loads data from the available files
 - Performs the requested analysis
 - Prints clear, formatted results
-- For visualizations, use this pattern:
+- For visualizations, save to a file and use the display-image tool:
 
 \`\`\`python
 import matplotlib.pyplot as plt
-import io
-import base64
 
 # IMPORTANT: Use English labels only - Chinese fonts are not available in Pyodide
 # Use English for titles, labels, and text in plots
@@ -53,27 +52,29 @@ import base64
 # plt.xlabel('Year')
 # plt.ylabel('Count')
 
-# Save and display the plot
-buf = io.BytesIO()
-plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
-buf.seek(0)
-import base64
-img_str = base64.b64encode(buf.read()).decode()
-print(f'<img src="data:image/png;base64,{img_str}" />')
+# Save the plot to a file
+plt.savefig('plot.png', format='png', dpi=100, bbox_inches='tight')
 plt.close()
+
+# The plot is now saved and ready to be displayed
+print("Plot saved to plot.png")
 \`\`\`
+
+After executing code that saves a plot, you MUST immediately call the display-image tool with the filepath.
 
 CRITICAL RULES:
 - NEVER use plt.show() - it doesn't work in Pyodide
 - NEVER use Chinese characters in plot titles, labels, or text - Chinese fonts are not available
 - Always use English for all plot text to avoid font warnings
-- Always use the base64 encoding method above for displaying plots`,
+- Save plots to files (e.g., 'plot.png', 'chart.png')
+- ALWAYS call display-image tool immediately after python-executor returns success for code that saves a plot`,
 
   // Pass AI SDK model instance directly (not config object)
   model: anthropic('claude-sonnet-4-5-20250929'),
 
   tools: {
     pythonExecutor,
+    displayImage,
   },
 });
 

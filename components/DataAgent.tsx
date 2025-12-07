@@ -6,6 +6,8 @@ import { MastraDataAgent, type AgentStep } from '@/lib/mastraDataAgent';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface Message {
   id: string;
@@ -336,6 +338,10 @@ export default function DataAgent() {
 
             // Assistant message (AI response)
             if (msg.type === 'assistant') {
+              // 检查是否包含代码块
+              const hasCodeBlock = msg.content.includes('```');
+              const title = hasCodeBlock ? 'RUNNING SCRIPT' : 'AI RESPONSE';
+
               return (
                 <div key={msg.id} className="max-w-4xl mx-auto mb-4">
                   <div className="flex gap-3">
@@ -346,15 +352,16 @@ export default function DataAgent() {
                       </svg>
                     </div>
                     <div className={`flex-1 px-4 py-3 rounded-lg ${
-                      msg.isError ? 'bg-red-50 border border-red-200' : 'bg-white border border-gray-200'
+                      msg.isError ? 'bg-red-50 border border-red-200' : 'bg-[#fafafa] border border-gray-200'
                     }`}>
+                      <div className="text-xs font-semibold text-gray-500 mb-2">{title}</div>
                       <div className="prose prose-sm max-w-none [&>*]:text-gray-900 [&_p]:text-gray-900 [&_li]:text-gray-900 [&_h1]:text-gray-900 [&_h2]:text-gray-900 [&_h3]:text-gray-900 [&_strong]:text-gray-900 [&_em]:text-gray-900 [&_pre]:!bg-gray-900 [&_pre]:!text-white [&_pre_code]:!text-white">
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           rehypePlugins={[rehypeRaw]}
                           components={{
                             p: ({node, ...props}) => (
-                              <p className="text-gray-900 my-2" {...props} />
+                              <p className="text-gray-900 my-2 last:mb-0" {...props} />
                             ),
                             h1: ({node, ...props}) => (
                               <h1 className="text-gray-900 font-bold text-xl my-3" {...props} />
@@ -371,14 +378,51 @@ export default function DataAgent() {
                             li: ({node, ...props}) => (
                               <li className="text-gray-900" {...props} />
                             ),
-                            pre: ({node, ...props}) => (
-                              <pre className="bg-gray-900 text-white p-3 rounded overflow-x-auto my-2" {...props} />
-                            ),
-                            code: ({node, inline, ...props}) => (
-                              inline ?
-                                <code className="bg-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs" {...props} /> :
-                                <code className="font-mono text-sm text-white" {...props} />
-                            ),
+                            pre: ({node, children, ...props}) => {
+                              // 如果 children 是 code 标签，直接返回 children（避免双层包裹）
+                              return <>{children}</>;
+                            },
+                            code: ({node, inline, className, children, ...props}: any) => {
+                              const match = /language-(\w+)/.exec(className || '');
+                              const language = match ? match[1] : 'python';
+                              const codeString = String(children).replace(/\n$/, '');
+
+                              return !inline ? (
+                                <div className="overflow-x-auto">
+                                  <SyntaxHighlighter
+                                    style={oneLight}
+                                    language={language}
+                                    PreTag="div"
+                                    showLineNumbers={true}
+                                    wrapLines={true}
+                                    lineProps={{
+                                      style: {
+                                        wordBreak: 'break-all',
+                                        whiteSpace: 'pre-wrap',
+                                      }
+                                    }}
+                                    customStyle={{
+                                      margin: 0,
+                                      padding: '1rem',
+                                      fontSize: '0.875rem',
+                                      lineHeight: '1.5',
+                                      borderRadius: 0,
+                                      border: 'none',
+                                      backgroundColor: '#fafafa',
+                                      maxWidth: '100%',
+                                      overflow: 'visible',
+                                    }}
+                                    {...props}
+                                  >
+                                    {codeString}
+                                  </SyntaxHighlighter>
+                                </div>
+                              ) : (
+                                <code className="bg-gray-200 text-gray-900 px-1 py-0.5 rounded text-xs" {...props}>
+                                  {children}
+                                </code>
+                              );
+                            },
                             img: ({node, ...props}) => (
                               <img
                                 className="max-w-full h-auto rounded-lg shadow-md my-4"

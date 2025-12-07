@@ -181,6 +181,39 @@ export class MastraDataAgent {
                 onBubble(bubble);
                 // 不添加到 allText，因为这是代码块，不是对话内容
 
+              } else if (message.type === 'display-image') {
+                // 显示图片 - 从 Pyodide 虚拟文件系统读取
+                console.log('🖼️  [Display Image]:', message.filepath);
+
+                try {
+                  // 从 Pyodide FS 读取图片文件
+                  const imageData = this.pyodide.FS.readFile(message.filepath);
+
+                  // 转换为 base64
+                  const base64 = btoa(
+                    imageData.reduce((data: string, byte: number) => data + String.fromCharCode(byte), '')
+                  );
+
+                  // 创建图片气泡
+                  const bubble = {
+                    id: `image-${Date.now()}-${Math.random()}`,
+                    type: 'code-result' as const,
+                    content: `<img src="data:image/png;base64,${base64}" />`,
+                    isStreaming: false
+                  };
+                  console.log('🎈 [Creating Image Bubble]:', bubble.id);
+                  onBubble(bubble);
+                } catch (error: any) {
+                  const bubble = {
+                    id: `image-error-${Date.now()}-${Math.random()}`,
+                    type: 'code-result' as const,
+                    content: `Error loading image: ${error.message}`,
+                    isError: true
+                  };
+                  console.log('🎈 [Creating Error Bubble]:', bubble.id);
+                  onBubble(bubble);
+                }
+
               } else if (message.type === 'code-execution') {
                 // 代码执行前，先结束当前文本气泡
                 if (currentTextBubbleId) {
