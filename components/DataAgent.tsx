@@ -65,23 +65,6 @@ export default function DataAgent() {
             const mastraAgent = new MastraDataAgent(pyodideInstance);
             setAgent(mastraAgent);
 
-            // Load default HR dataset
-            try {
-              console.log('Loading default HR dataset...');
-              const response = await fetch('/data/HRDataset_v14.csv');
-              const csvText = await response.text();
-              const data = new TextEncoder().encode(csvText);
-              pyodideInstance.FS.writeFile('HRDataset_v14.csv', data);
-
-              const newFiles = ['HRDataset_v14.csv'];
-              setUploadedFiles(newFiles);
-              mastraAgent.updateAvailableFiles(newFiles);
-
-              console.log('Default dataset loaded');
-            } catch (err) {
-              console.error('Failed to load default dataset:', err);
-            }
-
             setLoadingProgress(100);
             setIsLoading(false);
           } catch (err) {
@@ -112,20 +95,6 @@ export default function DataAgent() {
     }
   }, [uploadedFiles, agent]);
 
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      // Use setTimeout to ensure DOM has updated
-      setTimeout(() => {
-        if (chatContainerRef.current) {
-          chatContainerRef.current.scrollTo({
-            top: chatContainerRef.current.scrollHeight,
-            behavior: 'smooth'
-          });
-        }
-      }, 100);
-    }
-  }, [messages]);
 
   // Handle file selection
   const handleFileSelect = useCallback((files: FileList | null) => {
@@ -305,7 +274,6 @@ export default function DataAgent() {
       <main
         ref={chatContainerRef}
         className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6"
-        style={{ scrollBehavior: 'smooth' }}
       >
         {messages.length === 0 ? (
           <div className="max-w-3xl mx-auto text-center mt-10">
