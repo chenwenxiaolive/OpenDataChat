@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyodide Data Agent Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        
+        /* 代码块样式 */
+        .code-terminal {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+        }
+        
+        /* 思考过程动画 */
+        .thinking-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        /* 拖拽覆盖层 */
+        #drop-overlay {
+            backdrop-filter: blur(4px);
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px dashed #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col text-gray-800">
+
+    <header class="bg-white border-b px-6 py-4 flex items-center justify-between shadow-sm z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <h1 class="font-bold text-lg text-gray-800">Data Agent <span class="text-xs font-normal text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Pyodide Powered</span></h1>
+        </div>
+        <div id="status-indicator" class="text-xs flex items-center gap-2 text-yellow-600">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> 正在加载 Python 环境...
+        </div>
+    </header>
+
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 pb-32">
+        <div class="max-w-3xl mx-auto text-center mt-10">
+            <h2 class="text-2xl font-bold mb-2">我是你的数据分析智能体</h2>
+            <p class="text-gray-500">请拖入 Excel/CSV 文件，或者直接告诉我你想分析什么数据。</p>
+        </div>
+    </main>
+
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t p-4 z-20">
+        <div class="max-w-3xl mx-auto relative">
+            
+            <div id="file-preview" class="hidden absolute -top-12 left-0 bg-blue-50 text-blue-700 px-3 py-1 rounded-t-md text-sm border border-b-0 border-blue-200 flex items-center gap-2">
+                <i class="fa-solid fa-file-excel"></i>
+                <span id="filename-display">data.xlsx</span>
+                <button onclick="clearFile()" class="hover:text-red-500"><i class="fa-solid fa-times"></i></button>
+            </div>
+
+            <div class="relative shadow-lg rounded-xl border border-gray-300 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 transition-shadow">
+                <textarea id="user-input" rows="1" class="w-full p-4 pr-24 resize-none outline-none max-h-40" placeholder="描述你的要求，例如：'分析这个表格的销售趋势'..." oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'"></textarea>
+                
+                <div class="absolute bottom-2 right-2 flex items-center gap-1">
+                    <button onclick="triggerFileSelect()" class="p-2 text-gray-400 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors" title="上传文件">
+                        <i class="fa-solid fa-paperclip"></i>
+                    </button>
+                    <button onclick="handleSend()" id="send-btn" class="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+            <p class="text-center text-xs text-gray-400 mt-2">支持拖拽 Excel / CSV 文件直达此处</p>
+        </div>
+    </div>
+
+    <input type="file" id="file-upload" class="hidden" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(this.files)">
+
+    <div id="drop-overlay" class="fixed inset-0 hidden flex-col items-center justify-center z-50 pointer-events-none">
+        <i class="fa-solid fa-file-import text-6xl text-blue-500 mb-4"></i>
+        <h3 class="text-2xl font-bold text-blue-600">释放文件以加载</h3>
+    </div>
+
+    <script>
+        let pyodide = null;
+        let currentFile = null;
+
+        // 1. 初始化 Pyodide
+        async function initPyodide() {
+            try {
+                pyodide = await loadPyodide();
+                // 加载常用数据科学包
+                await pyodide.loadPackage(["pandas", "matplotlib"]); 
+                
+                const status = document.getElementById('status-indicator');
+                status.innerHTML = '<i class="fa-solid fa-check-circle"></i> Python 环境就绪';
+                status.className = "text-xs flex items-center gap-2 text-green-600";
+                console.log("Pyodide Ready");
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        initPyodide();
+
+        // 2. 拖拽逻辑
+        const body = document.body;
+        const dropOverlay = document.getElementById('drop-overlay');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        body.addEventListener('dragenter', () => dropOverlay.classList.remove('hidden'));
+        body.addEventListener('dragleave', (e) => {
+            if (e.relatedTarget === null) dropOverlay.classList.add('hidden');
+        });
+        body.addEventListener('drop', (e) => {
+            dropOverlay.classList.add('hidden');
+            const files = e.dataTransfer.files;
+            handleFileSelect(files);
+        });
+
+        function handleFileSelect(files) {
+            if (files.length > 0) {
+                currentFile = files[0];
+                document.getElementById('file-preview').classList.remove('hidden');
+                document.getElementById('filename-display').innerText = currentFile.name;
+                
+                // 将文件写入 Pyodide 虚拟文件系统
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    pyodide.FS.writeFile(currentFile.name, data);
+                    appendSystemMessage(`已加载文件: ${currentFile.name} (已挂载到虚拟内存)`);
+                };
+                reader.readAsArrayBuffer(currentFile);
+            }
+        }
+
+        function clearFile() {
+            currentFile = null;
+            document.getElementById('file-preview').classList.add('hidden');
+            document.getElementById('file-upload').value = '';
+        }
+        function triggerFileSelect() { document.getElementById('file-upload').click(); }
+
+        // 3. 消息与执行逻辑
+        async function handleSend() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if (!text && !currentFile) return;
+
+            // 显示用户消息
+            appendUserMessage(text);
+            input.value = '';
+            input.style.height = 'auto';
+
+            // 模拟智能体工作流
+            const agentId = Date.now();
+            createAgentBlock(agentId);
+
+            // 步骤 A: 思考 (模拟 LLM 生成)
+            updateAgentStatus(agentId, 'thinking', '正在分析需求并生成代码...');
+            await new Promise(r => setTimeout(r, 1500)); // 假装思考
+
+            // 这里本来应该调用 LLM API 获取 Python 代码
+            // 我们根据是否有文件来 Mock 一段代码
+            let mockPythonCode = "";
+            let mockThought = "";
+
+            if (currentFile) {
+                mockThought = `检测到文件 ${currentFile.name}。我将使用 Pandas 读取数据并显示前几行。`;
+                mockPythonCode = `import pandas as pd\n\n# 读取文件\ndf = pd.read_excel('${currentFile.name}') if '${currentFile.name}'.endswith('xlsx') else pd.read_csv('${currentFile.name}')\n\n# 显示数据摘要\nprint(df.head())`;
+            } else {
+                mockThought = "没有检测到文件，我将创建一个示例 DataFrame 并绘制一个简单的图表来演示能力。";
+                mockPythonCode = `import pandas as pd\nimport matplotlib.pyplot as plt\nimport io, base64\n\n# 创建示例数据\ndata = {'Category': ['A', 'B', 'C', 'D'], 'Values': [10, 23, 15, 30]}\ndf = pd.DataFrame(data)\nprint("生成的数据:")\nprint(df)\n\n# 模拟绘图 (在 Pyodide 中需要处理 backend)\n# 这里仅作为文本演示`;
+            }
+
+            updateThought(agentId, mockThought);
+
+            // 步骤 B: 执行代码
+            updateAgentStatus(agentId, 'running', '正在 Pyodide 中执行...');
+            updateCodeBlock(agentId, mockPythonCode);
+
+            try {
+                // 重定向 stdout
+                pyodide.runPython(`
+                    import sys
+                    from io import StringIO
+                    sys.stdout = StringIO()
+                `);
+                
+                await pyodide.runPythonAsync(mockPythonCode);
+                
+                const stdout = pyodide.runPython("sys.stdout.getvalue()");
+                
+                updateResult(agentId, stdout || "代码执行成功，无文本输出。");
+                updateAgentStatus(agentId, 'done', '完成');
+
+            } catch (err) {
+                updateResult(agentId, `Error: ${err.message}`, true);
+                updateAgentStatus(agentId, 'error', '执行出错');
+            }
+        }
+
+        // --- DOM 操作辅助函数 ---
+
+        function appendUserMessage(text) {
+            if(!text) return;
+            const container = document.getElementById('chat-container');
+            const msg = document.createElement('div');
+            msg.className = "flex justify-end mb-6";
+            msg.innerHTML = `<div class="bg-gray-100 text-gray-800 px-5 py-3 rounded-2xl rounded-tr-sm max-w-2xl shadow-sm">${text}</div>`;
+            container.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function appendSystemMessage(text) {
+            const container = document.getElementById('chat-container');
+            const msg = document.createElement('div');
+            msg.className = "flex justify-center mb-6 text-xs text-gray-400";
+            msg.innerText = text;
+            container.appendChild(msg);
+        }
+
+        function createAgentBlock(id) {
+            const container = document.getElementById('chat-container');
+            const wrapper = document.createElement('div');
+            wrapper.className = "flex gap-4 mb-8 max-w-4xl mx-auto w-full";
+            wrapper.innerHTML = `
+                <div class="w-8 h-8 flex-shrink-0 bg-blue-600 rounded-lg flex items-center justify-center text-white mt-1">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <div class="flex-1 space-y-3" id="agent-content-${id}">
+                    <div class="flex items-center gap-2 text-sm text-blue-600 font-medium thinking-pulse" id="status-${id}">
+                        <i class="fa-solid fa-brain"></i> <span>思考中...</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(wrapper);
+            scrollToBottom();
+        }
+
+        function updateAgentStatus(id, state, text) {
+            const statusEl = document.getElementById(`status-${id}`);
+            if(state === 'done') {
+                statusEl.className = "flex items-center gap-2 text-sm text-green-600 font-medium mb-2";
+                statusEl.innerHTML = `<i class="fa-solid fa-check"></i> <span>${text}</span>`;
+            } else if (state === 'running') {
+                statusEl.className = "flex items-center gap-2 text-sm text-purple-600 font-medium mb-2 thinking-pulse";
+                statusEl.innerHTML = `<i class="fa-solid fa-terminal"></i> <span>${text}</span>`;
+            } else {
+                statusEl.querySelector('span').innerText = text;
+            }
+        }
+
+        function updateThought(id, text) {
+            const content = document.getElementById(`agent-content-${id}`);
+            const div = document.createElement('div');
+            div.className = "text-gray-600 bg-white border border-gray-200 p-3 rounded-lg text-sm mb-2";
+            div.innerHTML = `<div class="font-bold text-xs text-gray-400 mb-1 uppercase tracking-wide">Thought Process</div>${text}`;
+            content.appendChild(div);
+        }
+
+        function updateCodeBlock(id, code) {
+            const content = document.getElementById(`agent-content-${id}`);
+            const pre = document.createElement('pre');
+            pre.className = "code-terminal p-4 rounded-lg text-sm overflow-x-auto mb-2";
+            pre.innerText = code;
+            content.appendChild(pre);
+        }
+
+        function updateResult(id, result, isError = false) {
+            const content = document.getElementById(`agent-content-${id}`);
+            const div = document.createElement('div');
+            div.className = `p-4 rounded-lg text-sm border ${isError ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gray-50 border-gray-200 text-gray-800'}`;
+            div.innerHTML = `<div class="font-bold text-xs mb-2 uppercase tracking-wide opacity-50">Output</div><pre class="whitespace-pre-wrap font-mono">${result}</pre>`;
+            content.appendChild(div);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            const main = document.getElementById('chat-container');
+            main.scrollTop = main.scrollHeight;
+        }
+    </script>
+</body>
+</html>
