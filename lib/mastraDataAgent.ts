@@ -64,6 +64,8 @@ export class MastraDataAgent {
       let allText = '';
       let currentTextBubbleId: string | null = null;
       let currentTextContent = '';
+      let currentCodeBubbleId: string | null = null;
+      let currentCodeContent = '';
 
       if (reader) {
         while (true) {
@@ -118,8 +120,43 @@ export class MastraDataAgent {
                   currentTextContent = '';
                 }
 
+              } else if (message.type === 'code-block-start') {
+                // 代码块开始 - 创建新的代码气泡
+                currentCodeBubbleId = `code-${Date.now()}-${Math.random()}`;
+                currentCodeContent = '';
+
+              } else if (message.type === 'code-block-chunk') {
+                // 代码块分块 - 累积到当前代码气泡
+                if (currentCodeBubbleId) {
+                  currentCodeContent += message.content;
+
+                  // 更新气泡（流式效果）
+                  const bubble = {
+                    id: currentCodeBubbleId,
+                    type: 'assistant' as const,
+                    content: currentCodeContent,
+                    isStreaming: true
+                  };
+                  onBubble(bubble);
+                }
+
+              } else if (message.type === 'code-block-complete') {
+                // 代码块完成
+                if (currentCodeBubbleId) {
+                  const bubble = {
+                    id: currentCodeBubbleId,
+                    type: 'assistant' as const,
+                    content: currentCodeContent,
+                    isStreaming: false
+                  };
+                  console.log('🎈 [Creating Code Block Bubble]:', bubble.id);
+                  onBubble(bubble);
+                  currentCodeBubbleId = null;
+                  currentCodeContent = '';
+                }
+
               } else if (message.type === 'assistant-text') {
-                // 完整文本消息（代码块等）
+                // 完整文本消息（向后兼容）
                 // 先结束当前的打字机效果
                 if (currentTextBubbleId) {
                   const bubble = {
