@@ -10,9 +10,27 @@
 
 **Free. Open. Powerful. Chat with your data using AI - entirely in your browser.**
 
-[Live Demo](#) • [Quick Start](#quick-start) • [Features](#features) • [Examples](#usage-examples)
+[Live Demo](https://open-data-chat-2z4s.vercel.app/) • [Quick Start](#quick-start) • [Features](#features) • [Examples](#usage-examples)
 
 </div>
+
+---
+
+## 🎯 Try It Now - No Setup Required!
+
+**Live Demo**: [https://open-data-chat-2z4s.vercel.app/](https://open-data-chat-2z4s.vercel.app/)
+
+Want to try it immediately without any setup? Use our free API key:
+
+1. Visit the [Live Demo](https://open-data-chat-2z4s.vercel.app/)
+2. Click the 🔑 key icon in the top right corner
+3. Enter this free API key:
+   ```
+   cr_940a0e6d7951390ea8399f7d2fe3cd5f3f5595414bda865ea91080c068b1befa
+   ```
+4. Click "Save" and start analyzing data!
+
+> **Note**: This is a shared demo key with rate limits. For production use, please get your own API key from [console.anthropic.com](https://console.anthropic.com/).
 
 ---
 
